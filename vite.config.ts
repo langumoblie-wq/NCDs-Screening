@@ -5,10 +5,10 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    // เปลี่ยน /my-repo-name/ เป็นชื่อ repository ของคุณใน GitHub
-    // เช่น ถ้า URL คือ https://username.github.io/ncd-screening/ ให้ใส่ base: '/ncd-screening/'
-    // หากทดสอบใน AI Studio ให้ใช้ '/' ชั่วคราว หรือใช้ process.env เพื่อแยกแยะ Environment
-    base: process.env.NODE_ENV === 'production' ? '/ncds-screening/' : '/',
+    
+    
+    
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
