@@ -237,11 +237,11 @@ export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpd
                     {record.bpSys}/{record.bpDia}
                   </div>
                   <span className={`inline-block text-[10px] px-1.5 py-0.2 rounded-full font-medium mt-0.5 ${
-                    record.htResult.level === "danger" ? "bg-red-100 text-red-800" :
-                    record.htResult.level === "risk" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
+                    record.htResult?.level === "danger" ? "bg-red-100 text-red-800" :
+                    record.htResult?.level === "risk" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
                   }`}>
-                    {record.htResult.level === "danger" ? "สงสัยป่วย" :
-                     record.htResult.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}
+                    {record.htResult?.level === "danger" ? "สงสัยป่วย" :
+                     record.htResult?.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}
                   </span>
                 </div>
 
@@ -259,12 +259,12 @@ export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpd
                   </div>
                   <span className={`inline-block text-[10px] px-1.5 py-0.2 rounded-full font-medium mt-0.5 ${
                     !record.sugar || record.sugar === 0 ? "bg-slate-100 text-slate-500 border border-slate-200" :
-                    record.dmResult.level === "danger" ? "bg-red-100 text-red-800" :
-                    record.dmResult.level === "risk" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
+                    record.dmResult?.level === "danger" ? "bg-red-100 text-red-800" :
+                    record.dmResult?.level === "risk" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
                   }`}>
                     {!record.sugar || record.sugar === 0 ? "ไม่ได้ตรวจ" :
-                     record.dmResult.level === "danger" ? "สงสัยป่วย" :
-                     record.dmResult.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}
+                     record.dmResult?.level === "danger" ? "สงสัยป่วย" :
+                     record.dmResult?.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}
                   </span>
                 </div>
 

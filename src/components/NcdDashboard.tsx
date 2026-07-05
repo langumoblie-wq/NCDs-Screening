@@ -533,23 +533,28 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
     let foodAnyRiskCount = 0;
 
     filteredRecords.forEach((r) => {
+      if (!r) return;
+      
+      const htLevel = r.htResult?.level || "normal";
+      const dmLevel = r.dmResult?.level || "normal";
+
       // Main group breakdown
-      if (r.htResult.level === "danger" || r.dmResult.level === "danger") {
+      if (htLevel === "danger" || dmLevel === "danger") {
         danger++;
-      } else if (r.htResult.level === "risk" || r.dmResult.level === "risk") {
+      } else if (htLevel === "risk" || dmLevel === "risk") {
         risk++;
       } else {
         normal++;
       }
 
       // HT specific breakdown
-      if (r.htResult.level === "danger") htDanger++;
-      else if (r.htResult.level === "risk") htRisk++;
+      if (htLevel === "danger") htDanger++;
+      else if (htLevel === "risk") htRisk++;
       else htNormal++;
 
       // DM specific breakdown
-      if (r.dmResult.level === "danger") dmDanger++;
-      else if (r.dmResult.level === "risk") dmRisk++;
+      if (dmLevel === "danger") dmDanger++;
+      else if (dmLevel === "risk") dmRisk++;
       else dmNormal++;
 
       // Lifestyle risks tallies
@@ -623,9 +628,9 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
       r.bmi,
       r.bpSys,
       r.bpDia,
-      r.htResult.level,
+      r.htResult?.level || "",
       r.sugar,
-      r.dmResult.level,
+      r.dmResult?.level || "",
       `"${r.followUpAction}"`
     ]);
 
@@ -980,11 +985,11 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
                       {/* HT */}
                       <td className="py-4 px-5 text-center">
                         <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs ${
-                          r.htResult.level === "danger" ? "bg-red-50 text-red-700 border border-red-200" :
-                          r.htResult.level === "risk" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                          r.htResult?.level === "danger" ? "bg-red-50 text-red-700 border border-red-200" :
+                          r.htResult?.level === "risk" ? "bg-amber-50 text-amber-700 border border-amber-200" :
                           "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         }`}>
-                          {r.bpSys}/{r.bpDia} mmHg • {r.htResult.level === "danger" ? "สงสัยป่วย" : r.htResult.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}
+                          {r.bpSys}/{r.bpDia} mmHg • {r.htResult?.level === "danger" ? "สงสัยป่วย" : r.htResult?.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}
                         </span>
                       </td>
 
@@ -992,12 +997,12 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
                       <td className="py-4 px-5 text-center">
                         <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs ${
                           !r.sugar || r.sugar === 0 ? "bg-slate-50 text-slate-500 border border-slate-200" :
-                          r.dmResult.level === "danger" ? "bg-red-50 text-red-700 border border-red-200" :
-                          r.dmResult.level === "risk" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                          r.dmResult?.level === "danger" ? "bg-red-50 text-red-700 border border-red-200" :
+                          r.dmResult?.level === "risk" ? "bg-amber-50 text-amber-700 border border-amber-200" :
                           "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         }`}>
                           {r.sugar && r.sugar > 0 ? (
-                            <>{r.sugar} mg/dL • {r.dmResult.level === "danger" ? "สงสัยป่วย" : r.dmResult.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}</>
+                            <>{r.sugar} mg/dL • {r.dmResult?.level === "danger" ? "สงสัยป่วย" : r.dmResult?.level === "risk" ? "กลุ่มเสี่ยง" : "ปกติ"}</>
                           ) : (
                             "ไม่ได้ตรวจ"
                           )}

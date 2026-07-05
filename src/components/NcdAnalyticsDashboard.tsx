@@ -165,13 +165,13 @@ export const NcdAnalyticsDashboard: React.FC<NcdAnalyticsDashboardProps> = ({ re
         const last = personalRecords[personalRecords.length - 1];
         
         // Check if blood pressure or blood sugar improved (decreased)
-        const bpImproved = last.bpSys < first.bpSys || (last.bpSys === first.bpSys && last.bpDia <= first.bpDia);
-        const sugarImproved = last.sugar < first.sugar;
+        const bpImproved = (last?.bpSys || 0) < (first?.bpSys || 0) || ((last?.bpSys || 0) === (first?.bpSys || 0) && (last?.bpDia || 0) <= (first?.bpDia || 0));
+        const sugarImproved = (last?.sugar || 0) < (first?.sugar || 0);
         const riskLevelImproved = 
-          (first.htResult.level === "danger" && last.htResult.level !== "danger") ||
-          (first.dmResult.level === "danger" && last.dmResult.level !== "danger") ||
-          (first.htResult.level === "risk" && last.htResult.level === "normal") ||
-          (first.dmResult.level === "risk" && last.dmResult.level === "normal");
+          (first.htResult?.level === "danger" && last.htResult?.level !== "danger") ||
+          (first.dmResult?.level === "danger" && last.dmResult?.level !== "danger") ||
+          (first.htResult?.level === "risk" && last.htResult?.level === "normal") ||
+          (first.dmResult?.level === "risk" && last.dmResult?.level === "normal");
 
         if (bpImproved || sugarImproved || riskLevelImproved) {
           followUpImproved++;
@@ -183,21 +183,21 @@ export const NcdAnalyticsDashboard: React.FC<NcdAnalyticsDashboardProps> = ({ re
     // Process record metrics
     filteredRecords.forEach((r) => {
       // Risk groups
-      if (r.htResult.level === "danger" || r.dmResult.level === "danger") {
+      if (r.htResult?.level === "danger" || r.dmResult?.level === "danger") {
         dangerCount++;
-      } else if (r.htResult.level === "risk" || r.dmResult.level === "risk") {
+      } else if (r.htResult?.level === "risk" || r.dmResult?.level === "risk") {
         riskCount++;
       } else {
         normalCount++;
       }
 
       // Disease-specific
-      if (r.htResult.level === "danger") htDanger++;
-      else if (r.htResult.level === "risk") htRisk++;
+      if (r.htResult?.level === "danger") htDanger++;
+      else if (r.htResult?.level === "risk") htRisk++;
       else htNormal++;
 
-      if (r.dmResult.level === "danger") dmDanger++;
-      else if (r.dmResult.level === "risk") dmRisk++;
+      if (r.dmResult?.level === "danger") dmDanger++;
+      else if (r.dmResult?.level === "risk") dmRisk++;
       else dmNormal++;
 
       // Lifestyle
@@ -240,7 +240,7 @@ export const NcdAnalyticsDashboard: React.FC<NcdAnalyticsDashboardProps> = ({ re
         (!r.alcohol || r.alcohol.includes("ไม่ดื่ม")) && 
         (r.exercise && !r.exercise.includes("ไม่ออก"));
       
-      const isNormal = r.htResult.level === "normal" && r.dmResult.level === "normal";
+      const isNormal = r.htResult?.level === "normal" && r.dmResult?.level === "normal";
 
       if (isHealthy) {
         healthyCount++;
@@ -262,7 +262,7 @@ export const NcdAnalyticsDashboard: React.FC<NcdAnalyticsDashboardProps> = ({ re
         areaStats[area] = { total: 0, riskOrDanger: 0 };
       }
       areaStats[area].total++;
-      if (r.htResult.level !== "normal" || r.dmResult.level !== "normal") {
+      if (r.htResult?.level !== "normal" || r.dmResult?.level !== "normal") {
         areaStats[area].riskOrDanger++;
       }
     });
@@ -293,13 +293,13 @@ export const NcdAnalyticsDashboard: React.FC<NcdAnalyticsDashboardProps> = ({ re
 
       if (recordModel === "หมู่บ้าน") {
         mbTotal++;
-        if (r.htResult.level === "danger" || r.dmResult.level === "danger") mbDanger++;
-        else if (r.htResult.level === "risk" || r.dmResult.level === "risk") mbRisk++;
+        if (r.htResult?.level === "danger" || r.dmResult?.level === "danger") mbDanger++;
+        else if (r.htResult?.level === "risk" || r.dmResult?.level === "risk") mbRisk++;
         else mbNormal++;
       } else if (recordModel === "ตำบล") {
         tbTotal++;
-        if (r.htResult.level === "danger" || r.dmResult.level === "danger") tbDanger++;
-        else if (r.htResult.level === "risk" || r.dmResult.level === "risk") tbRisk++;
+        if (r.htResult?.level === "danger" || r.dmResult?.level === "danger") tbDanger++;
+        else if (r.htResult?.level === "risk" || r.dmResult?.level === "risk") tbRisk++;
         else tbNormal++;
       }
     });
