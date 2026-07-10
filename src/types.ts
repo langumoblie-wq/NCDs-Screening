@@ -32,6 +32,7 @@ export interface PersonalPlan {
   salt: PlanItem;
   sleep: PlanItem;
   water: PlanItem;
+  exercise: PlanItem;
 }
 
 export interface ScreeningRecord {
@@ -70,6 +71,7 @@ export interface ScreeningRecord {
   personalPlan?: PersonalPlan;
   aiAdvice?: string;
   createdAt?: string;
+  hasConsented?: boolean;
 }
 
 // Complete hierarchical location configuration according to the user's table image

@@ -457,6 +457,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpd
                       { key: "salt", label: "เค็ม" },
                       { key: "sleep", label: "การนอน" },
                       { key: "water", label: "การดื่มน้ำ" },
+                      { key: "exercise", label: "การออกกำลังกาย" },
                     ].map((item) => {
                       const planData = record.personalPlan?.[item.key as keyof typeof record.personalPlan];
                       return (

@@ -380,6 +380,8 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
   onAddScreeningClicked,
   onFollowUpRecord
 }) => {
+  const [recordToDelete, setRecordToDelete] = useState<ScreeningRecord | null>(null);
+  
   // Filters state
   const [searchTerm, setSearchTerm] = useState("");
   const [filterModel, setFilterModel] = useState<"หมู่บ้าน" | "ตำบล" | "">("");
@@ -1053,11 +1055,7 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
                             </button>
                           )}
                           <button
-                            onClick={() => {
-                              if(confirm(`คุณต้องการลบข้อมูลคัดกรองของคุณ "${r.name}" ใช่หรือไม่?`)) {
-                                onDeleteRecord(r.id);
-                              }
-                            }}
+                            onClick={() => setRecordToDelete(r)}
                             className="bg-rose-50 hover:bg-rose-100 text-rose-600 p-1.5 rounded-lg transition-colors cursor-pointer"
                             title="ลบรายงานนี้"
                           >
@@ -1075,6 +1073,38 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
         </div>
       </div>
 
+      {recordToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col p-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-center w-12 h-12 bg-rose-100 rounded-full mb-4 mx-auto">
+              <AlertTriangle className="w-6 h-6 text-rose-600" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 text-center mb-2">ยืนยันการลบข้อมูล</h3>
+            <p className="text-sm text-slate-600 text-center mb-6">
+              คุณต้องการลบข้อมูลคัดกรองของ <br/>
+              <span className="font-semibold text-slate-800">"{recordToDelete.name}"</span> ใช่หรือไม่? <br/>
+              <span className="text-xs text-rose-500 mt-2 block">การกระทำนี้ไม่สามารถกู้คืนได้</span>
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setRecordToDelete(null)}
+                className="flex-1 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                ยกเลิก
+              </button>
+              <button 
+                onClick={() => {
+                  onDeleteRecord(recordToDelete.id);
+                  setRecordToDelete(null);
+                }}
+                className="flex-1 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-sm"
+              >
+                ยืนยันการลบ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -288,6 +288,7 @@ export const NcdAnalyticsDashboard: React.FC<NcdAnalyticsDashboardProps> = ({ re
       salt: { set: 0, achieved: 0 },
       sleep: { set: 0, achieved: 0 },
       water: { set: 0, achieved: 0 },
+      exercise: { set: 0, achieved: 0 },
     };
 
     filteredRecords.forEach(r => {
@@ -330,7 +331,7 @@ export const NcdAnalyticsDashboard: React.FC<NcdAnalyticsDashboardProps> = ({ re
       const k = key as keyof typeof planTracking;
       return {
         key: k,
-        label: k === 'sweet' ? 'ลดหวาน' : k === 'fat' ? 'ลดมัน' : k === 'salt' ? 'ลดเค็ม' : k === 'sleep' ? 'ปรับการนอน' : 'ปรับการดื่มน้ำ',
+        label: k === 'sweet' ? 'ลดหวาน' : k === 'fat' ? 'ลดมัน' : k === 'salt' ? 'ลดเค็ม' : k === 'sleep' ? 'ปรับการนอน' : k === 'water' ? 'ปรับการดื่มน้ำ' : 'การออกกำลังกาย',
         set: planTracking[k].set,
         achieved: planTracking[k].achieved,
         achievedPct: planTracking[k].set > 0 ? Math.round((planTracking[k].achieved / planTracking[k].set) * 100) : 0

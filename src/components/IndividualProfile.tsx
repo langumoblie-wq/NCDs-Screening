@@ -725,6 +725,7 @@ export const IndividualProfile: React.FC<IndividualProfileProps> = ({
                         <th className="py-2.5 px-4 text-center">ลดเค็ม</th>
                         <th className="py-2.5 px-4 text-center">ปรับการนอน</th>
                         <th className="py-2.5 px-4 text-center">ปรับการดื่มน้ำ</th>
+                        <th className="py-2.5 px-4 text-center">การออกกำลังกาย</th>
                         <th className="py-2.5 px-4 text-center text-indigo-700 bg-indigo-50/50">รวมคะแนน</th>
                       </tr>
                     </thead>
@@ -737,7 +738,8 @@ export const IndividualProfile: React.FC<IndividualProfileProps> = ({
                           v.personalPlan.fat?.achieved,
                           v.personalPlan.salt?.achieved,
                           v.personalPlan.sleep?.achieved,
-                          v.personalPlan.water?.achieved
+                          v.personalPlan.water?.achieved,
+                          v.personalPlan.exercise?.achieved
                         ].filter(achieved => achieved === true).length;
                         
                         return (
@@ -749,7 +751,8 @@ export const IndividualProfile: React.FC<IndividualProfileProps> = ({
                               { key: 'fat', data: v.personalPlan.fat },
                               { key: 'salt', data: v.personalPlan.salt },
                               { key: 'sleep', data: v.personalPlan.sleep },
-                              { key: 'water', data: v.personalPlan.water }
+                              { key: 'water', data: v.personalPlan.water },
+                              { key: 'exercise', data: v.personalPlan.exercise }
                             ].map((item) => (
                               <td key={item.key} className="py-3 px-4 text-center border-l border-slate-50 relative">
                                 {item.data?.plan ? (

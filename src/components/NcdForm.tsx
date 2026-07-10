@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabase";
 import { DistrictType, ScreeningRecord, DISTRICT_TARGET_AREAS, DISTRICT_SUBDISTRICT_MAP, LOCATION_DATA, PersonalPlan } from "../types";
 import { calculateBMI, calculateHTRisk, calculateDMRisk, evaluateFoodHabit } from "../utils";
 import { FOOD_HABIT_QUESTIONS } from "../data/questions";
+import { ConsentModal } from "./ConsentModal";
 
 interface NcdFormProps {
   onSubmitSuccess: (record: ScreeningRecord, isEdit: boolean) => void;
@@ -21,6 +22,9 @@ export const NcdForm: React.FC<NcdFormProps> = ({
   isFollowUp = false,
   onCancelEdit
 }) => {
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [hasConsented, setHasConsented] = useState(false);
+
   // Personal Info
   const [name, setName] = useState("");
   const [visitNumber, setVisitNumber] = useState(1);
@@ -75,6 +79,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
     salt: { plan: "" },
     sleep: { plan: "" },
     water: { plan: "" },
+    exercise: { plan: "" },
   });
 
   // Food Habits scores (mapping of question ID to choice: 0, 1, or 2)
@@ -206,7 +211,15 @@ export const NcdForm: React.FC<NcdFormProps> = ({
       
       // Personal Plan
       if (initialRecord.personalPlan) {
-        setPersonalPlan(initialRecord.personalPlan);
+        setPersonalPlan({
+          sweet: { plan: "" },
+          fat: { plan: "" },
+          salt: { plan: "" },
+          sleep: { plan: "" },
+          water: { plan: "" },
+          exercise: { plan: "" },
+          ...initialRecord.personalPlan
+        });
       } else {
         setPersonalPlan({
           sweet: { plan: "" },
@@ -214,6 +227,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
           salt: { plan: "" },
           sleep: { plan: "" },
           water: { plan: "" },
+          exercise: { plan: "" },
         });
       }
       
@@ -221,6 +235,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
       setFoodHabitAnswers(initialRecord.foodHabitAnswers || {});
     } else {
       // Reset form to defaults
+      setHasConsented(false);
       setName("");
       setVisitNumber(1);
       setAge("");
@@ -264,6 +279,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
         salt: { plan: "" },
         sleep: { plan: "" },
         water: { plan: "" },
+        exercise: { plan: "" },
       });
       setFoodHabitAnswers({});
     }
@@ -279,8 +295,8 @@ export const NcdForm: React.FC<NcdFormProps> = ({
   const liveDmResult = sugar ? calculateDMRisk(Number(sugar)) : null;
 
   // Cascading location helper arrays
-  const availableDistricts = (modelType && modelType !== "")
-    ? (Object.keys(LOCATION_DATA[modelType]) as DistrictType[])
+  const availableDistricts = (modelType && modelType !== "" && LOCATION_DATA[modelType as "หมู่บ้าน" | "ตำบล"])
+    ? (Object.keys(LOCATION_DATA[modelType as "หมู่บ้าน" | "ตำบล"]) as DistrictType[])
     : (Object.keys(DISTRICT_SUBDISTRICT_MAP) as DistrictType[]);
 
   const availableSubdistricts = district
@@ -390,6 +406,15 @@ export const NcdForm: React.FC<NcdFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (Number(visitNumber) === 1 && !hasConsented && !initialRecord) {
+      setShowConsentModal(true);
+      return;
+    }
+
+    await proceedSubmit();
+  };
+
+  const proceedSubmit = async () => {
     // Validation for food questions
     let missingQuestions: string[] = [];
     FOOD_HABIT_QUESTIONS.forEach((cat) => {
@@ -476,6 +501,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
       },
       foodHabitAnswers,
       personalPlan,
+      hasConsented: initialRecord?.hasConsented || hasConsented,
     };
 
     const payload = (initialRecord && !isFollowUp) ? {
@@ -543,6 +569,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
 
     // Clear Form Fields only if not editing and not in follow-up mode
     if (!initialRecord || isFollowUp) {
+      setHasConsented(false);
       setName("");
       setVisitNumber(prev => prev + 1);
       setAge("");
@@ -1285,13 +1312,14 @@ export const NcdForm: React.FC<NcdFormProps> = ({
                     { key: "salt", label: "เค็ม" },
                     { key: "sleep", label: "การนอน" },
                     { key: "water", label: "การดื่มน้ำ" },
+                    { key: "exercise", label: "การออกกำลังกาย" },
                   ].map((item) => (
                     <tr key={item.key} className="hover:bg-slate-50/50 transition-colors">
                       <td className="py-3.5 px-4 font-semibold text-slate-700">{item.label}</td>
                       <td className="py-3.5 px-4">
                         <input 
                           type="text"
-                          value={personalPlan[item.key as keyof PersonalPlan].plan}
+                          value={personalPlan[item.key as keyof PersonalPlan]?.plan || ""}
                           onChange={(e) => setPersonalPlan(prev => ({
                             ...prev, 
                             [item.key]: { ...prev[item.key as keyof PersonalPlan], plan: e.target.value }
@@ -1306,7 +1334,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
                             <input 
                               type="radio" 
                               name={`plan_${item.key}`}
-                              checked={personalPlan[item.key as keyof PersonalPlan].achieved === true}
+                              checked={personalPlan[item.key as keyof PersonalPlan]?.achieved === true}
                               onChange={() => setPersonalPlan(prev => ({
                                 ...prev, 
                                 [item.key]: { ...prev[item.key as keyof PersonalPlan], achieved: true }
@@ -1319,7 +1347,7 @@ export const NcdForm: React.FC<NcdFormProps> = ({
                             <input 
                               type="radio" 
                               name={`plan_${item.key}`}
-                              checked={personalPlan[item.key as keyof PersonalPlan].achieved === false}
+                              checked={personalPlan[item.key as keyof PersonalPlan]?.achieved === false}
                               onChange={() => setPersonalPlan(prev => ({
                                 ...prev, 
                                 [item.key]: { ...prev[item.key as keyof PersonalPlan], achieved: false }
@@ -1363,6 +1391,17 @@ export const NcdForm: React.FC<NcdFormProps> = ({
         </div>
 
       </form>
+      
+      <ConsentModal
+        isOpen={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        onAccept={async () => {
+          setHasConsented(true);
+          setShowConsentModal(false);
+          await proceedSubmit();
+        }}
+        name={name}
+      />
     </div>
   );
 };
