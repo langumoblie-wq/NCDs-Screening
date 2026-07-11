@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { 
   X, Activity, Heart, User, MapPin, Phone, Calendar, ClipboardList, 
-  Trash2, Check, ShieldAlert, Printer, Download 
+  Trash2, Check, ShieldAlert, Printer, Download, FileCheck, Loader2
 } from "lucide-react";
 import { ScreeningRecord } from "../types";
 
@@ -16,11 +18,59 @@ interface RecordModalProps {
 export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpdateRecord, onDeleteRecord }) => {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
+  
+  // Format Thai date
+  const getThaiDate = (dateString?: string) => {
+    if (!dateString) return new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+    try {
+      return new Date(dateString).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch (e) {
+      return dateString;
+    }
+  };
+  const recordDate = getThaiDate(record.date);
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadConsent = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      
+      const element = pdfRef.current;
+      if (!element) throw new Error("Could not find PDF element");
+
+      // Render the HTML to canvas
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      
+      const filename = `ConsentForm_${record.name}_${new Date().getTime()}.pdf`;
+      pdf.save(filename);
+      
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการสร้างไฟล์ PDF");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
@@ -43,6 +93,15 @@ export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpd
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadConsent}
+              disabled={isGeneratingPdf}
+              className="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1.5 text-sm font-medium border border-indigo-200 bg-white shadow-sm disabled:opacity-50"
+              title="ดาวน์โหลดแบบแสดงความยินยอม (Consent Form)"
+            >
+              {isGeneratingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileCheck className="w-4 h-4" />}
+              <span className="hidden sm:inline">โหลดใบยินยอม</span>
+            </button>
             <button
               onClick={handlePrint}
               className="p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1.5 text-sm font-medium"
@@ -470,6 +529,67 @@ export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpd
           </button>
         </div>
       </motion.div>
+
+      {/* Hidden element for PDF rendering */}
+      <div className="absolute top-[-9999px] left-[-9999px]">
+        <div ref={pdfRef} style={{ width: '794px', minHeight: '1123px', padding: '70px 80px', backgroundColor: 'white', fontFamily: '"Kanit", sans-serif', color: 'black', boxSizing: 'border-box' }}>
+          <div style={{ textAlign: 'center', marginBottom: '35px' }}>
+             <h2 style={{ fontSize: '22px', fontWeight: 'bold', lineHeight: '1.4' }}>แบบเอกสารแสดงความยินยอม (Consent Form) (สำหรับบุคคลทั่วไป)</h2>
+          </div>
+          
+          <table style={{ width: '100%', marginBottom: '30px', borderCollapse: 'collapse', backgroundColor: '#f8fafc', fontSize: '15px' }}>
+             <tbody>
+                <tr>
+                  <td colSpan={2} style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', borderBottom: '2px solid white' }}>แบบแสดงความยินยอม (Consent Form)</td>
+                </tr>
+                <tr>
+                   <td style={{ padding: '12px 15px', width: '25%', fontWeight: 'bold' }}>ภายใต้โครงการ</td>
+                   <td style={{ padding: '12px 15px' }}>ร่วมสร้างต้นแบบลดกลุ่มเสี่ยงต่อโรค NCDs ด้วยแผนรายบุคคล ชุมชน ตำบล</td>
+                </tr>
+                <tr>
+                   <td style={{ padding: '12px 15px', fontWeight: 'bold' }}>ดำเนินการโดย</td>
+                   <td style={{ padding: '12px 15px' }}>Mini Flag Ship Satun</td>
+                </tr>
+             </tbody>
+          </table>
+
+          <div style={{ fontSize: '15px', lineHeight: '1.8' }}>
+             <p style={{ textIndent: '40px', marginBottom: '15px' }}>ข้าพเจ้าทราบดีว่าผู้รับทุนจำเป็นต้องเก็บรวบรวม ใช้ หรือเปิดเผย (ซึ่งต่อไปในเอกสารนี้เรียกว่า “ประมวลผล”) ข้อมูลส่วนบุคคลของข้าพเจ้า โดยมีรายละเอียดดังนี้</p>
+             <p style={{ fontWeight: 'bold', marginBottom: '10px' }}>1. วัตถุประสงค์ในการขอความยินยอม</p>
+             <p style={{ textIndent: '40px', marginBottom: '20px' }}>เก็บข้อมูลส่วนบุคคล ได้แก่ ข้อมูล ประวัติส่วนตัว ค่าความดันโลหิต ค่าน้ำหนัก ส่วนสูง และผลตรวจสุขภาพ และอื่นๆ ที่จำเป็น สำหรับใช้ในการดำเนินงานโครงการดังกล่าว เพื่อนำมาวิเคราะห์ข้อมูล และออกแบบกิจกรรม ให้เหมาะสมกับท่านในปรับเปลี่ยนพฤติกรรมให้มีสุขภาพที่ดีขึ้น</p>
+             
+             <div style={{ display: 'flex', justifyContent: 'center', gap: '50px', marginBottom: '30px', fontWeight: 'bold' }}>
+                <div>☑ ข้าพเจ้าให้ความยินยอม</div>
+                <div>☐ ข้าพเจ้าไม่ให้ความยินยอม</div>
+             </div>
+
+             <p style={{ textIndent: '40px', marginBottom: '15px' }}>ทั้งนี้ ก่อนการแสดงเจตนาในครั้งนี้ ข้าพเจ้าได้อ่านรายละเอียดจากเอกสารชี้แจงข้อมูลหรือได้รับคำอธิบายถึง วัตถุประสงค์ในการประมวลผลข้อมูลส่วนบุคคลของข้าพเจ้าโดยละเอียดและมีความเข้าใจเป็นอย่างดีแล้ว และข้าพเจ้าได้ ให้ความยินยอมหรือปฏิเสธไม่ให้ความยินยอมในเอกสารฉบับนี้ด้วยความสมัครใจโดยปราศจากการบังคับหรือชักจูง</p>
+             
+             <p style={{ textIndent: '40px', marginBottom: '20px' }}>ข้าพเจ้าทราบว่าสามารถถอนความยินยอมนี้เสียเมื่อใดก็ได้ เว้นแต่ในกรณีที่มีข้อจำกัดสิทธิตามกฎหมาย และ ข้าพเจ้าทราบว่าการถอนความยินยอมนี้ไม่มีผลกระทบต่อการประมวลผลข้อมูลส่วนบุคคลของข้าพเจ้าที่ได้ดำเนินการเสร็จ สิ้นไปแล้วก่อนการถอนความยินยอม</p>
+             
+             <p style={{ textIndent: '40px', marginBottom: '40px' }}>ข้าพเจ้าได้อ่านเอกสารฉบับนี้โดยละเอียดและมีความเข้าใจเป็นอย่างดีแล้วจึงได้ลงลายมือชื่อไว้เป็นหลักฐาน</p>
+
+             <div style={{ marginTop: '60px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', paddingRight: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                    <span>(ลงชื่อ)</span>
+                    <span style={{ display: 'inline-block', width: '220px', borderBottom: '1px dotted black', textAlign: 'center', fontWeight: 'bold', paddingBottom: '2px' }}>{record.name}</span>
+                    <span>ผู้เข้าร่วมกิจกรรม/เจ้าของข้อมูลส่วนบุคคล</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                    <span>(</span>
+                    <span style={{ display: 'inline-block', width: '220px', textAlign: 'center', fontWeight: 'bold' }}>{record.name}</span>
+                    <span>)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                    <span>วันที่</span>
+                    <span style={{ fontWeight: 'bold' }}>{recordDate}</span>
+                  </div>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
