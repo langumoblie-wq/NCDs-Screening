@@ -10,7 +10,6 @@ import { ScreeningRecord, DistrictType, LOCATION_DATA } from "../types";
 interface NcdDashboardProps {
   records: ScreeningRecord[];
   onDeleteRecord: (id: number) => void;
-  onClearAll: () => void;
   onSelectRecord: (record: ScreeningRecord) => void;
   onEditRecord?: (record: ScreeningRecord) => void;
   onAddScreeningClicked?: () => void;
@@ -374,7 +373,6 @@ const LifestyleBehaviors3O2S: React.FC<{
 export const NcdDashboard: React.FC<NcdDashboardProps> = ({ 
   records, 
   onDeleteRecord, 
-  onClearAll, 
   onSelectRecord,
   onEditRecord,
   onAddScreeningClicked,
@@ -1157,15 +1155,6 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
             >
               <FileSpreadsheet className="w-4 h-4" />
               ส่งออก Excel
-            </button>
-
-            {/* Action: Clear database */}
-            <button
-              onClick={onClearAll}
-              className="bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 font-semibold text-xs py-3 px-3.5 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer shrink-0 transition-all"
-            >
-              <RotateCcw className="w-4 h-4" />
-              ล้างข้อมูลทั้งหมด
             </button>
           </div>
 

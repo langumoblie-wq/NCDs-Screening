@@ -149,18 +149,6 @@ export default function App() {
     }
   };
 
-  // Clear all database
-  const handleClearAllRecords = async () => {
-    // Clear locally first
-    setRecords([]);
-
-    try {
-      await supabase.from('ncd_records').delete().neq('id', 0);
-    } catch (error) {
-      console.error("Error clearing records on server:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans antialiased text-slate-800">
       
@@ -307,7 +295,6 @@ export default function App() {
                 <NcdDashboard 
                   records={records}
                   onDeleteRecord={handleDeleteRecord}
-                  onClearAll={handleClearAllRecords}
                   onSelectRecord={setSelectedRecord}
                   onEditRecord={(record) => {
                     setEditingRecord(record);
