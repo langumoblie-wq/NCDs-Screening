@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { uploadToDrive, initAuth } from '../lib/driveUpload';
-import { Loader2, AlertCircle, FileCheck, X, CheckCircle2, Download, Printer } from 'lucide-react';
+import { Loader2, AlertCircle, FileCheck, X, CheckCircle2, Download, Printer, Cloud } from 'lucide-react';
 
 interface ConsentModalProps {
   isOpen: boolean;
@@ -13,6 +13,7 @@ interface ConsentModalProps {
 
 export const ConsentModal: React.FC<ConsentModalProps> = ({ isOpen, onClose, onAccept, name }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingDrive, setIsUploadingDrive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -75,39 +76,45 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({ isOpen, onClose, onA
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       
-      // Get Blob
-      const pdfBlob = pdf.output('blob');
       const filename = `ConsentForm_${name}_${new Date().getTime()}.pdf`;
       
-      // Upload to Drive folder (with fallback to root of user's own Drive)
-      let uploadSucceeded = false;
-      try {
-        const folderId = "1awgyvd-yup0O_2QIQfxwJTrowXNcUTXT";
-        try {
-          await uploadToDrive(pdfBlob, filename, folderId);
-          uploadSucceeded = true;
-          console.log("PDF successfully uploaded to the specific shared Google Drive folder.");
-        } catch (folderErr) {
-          console.warn("Upload to specific shared folder failed, trying root of user's Google Drive...", folderErr);
-          // Fallback: upload directly to root of user's own Google Drive
-          await uploadToDrive(pdfBlob, filename);
-          uploadSucceeded = true;
-          console.log("PDF successfully uploaded to user's root Google Drive folder.");
-        }
-      } catch (uploadErr: any) {
-        console.warn("Drive upload failed completely:", uploadErr);
-        uploadSucceeded = false;
-      }
-      
-      setDriveUploadSuccess(uploadSucceeded);
+      // We do not auto-upload here anymore to avoid blocking the user flow with popup blockings
       setGeneratedPdf(pdf);
       setPdfFilename(filename);
+      setDriveUploadSuccess(null); // Reset Drive upload status
       setIsSuccess(true);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to generate PDF");
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleUploadToDriveManual = async () => {
+    if (!generatedPdf) return;
+    
+    try {
+      setIsUploadingDrive(true);
+      const pdfBlob = generatedPdf.output('blob');
+      const folderId = "1awgyvd-yup0O_2QIQfxwJTrowXNcUTXT";
+      
+      try {
+        await uploadToDrive(pdfBlob, pdfFilename, folderId);
+        setDriveUploadSuccess(true);
+        console.log("PDF successfully uploaded to the specific shared Google Drive folder.");
+      } catch (folderErr) {
+        console.warn("Upload to specific shared folder failed, trying root of user's Google Drive...", folderErr);
+        // Fallback: upload directly to root of user's own Google Drive
+        await uploadToDrive(pdfBlob, pdfFilename);
+        setDriveUploadSuccess(true);
+        console.log("PDF successfully uploaded to user's root Google Drive folder.");
+      }
+    } catch (uploadErr: any) {
+      console.error("Drive upload failed completely:", uploadErr);
+      setDriveUploadSuccess(false);
+    } finally {
+      setIsUploadingDrive(false);
     }
   };
 
@@ -153,42 +160,11 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({ isOpen, onClose, onA
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col p-8 text-center animate-in zoom-in-95 duration-200">
-          {driveUploadSuccess ? (
-            <>
-              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-bounce" />
-              <h3 className="text-xl font-bold text-slate-800 mb-2">บันทึกและอัปโหลดสำเร็จ</h3>
-              <p className="text-sm text-slate-600 mb-6">
-                ระบบได้บันทึกเอกสารความยินยอมของท่าน และ<span className="font-semibold text-emerald-600">อัปโหลดไปยัง Google Drive เรียบร้อยแล้ว</span>
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="relative w-16 h-16 mx-auto mb-4">
-                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" />
-                <div className="absolute -bottom-1 -right-1 bg-amber-500 text-white rounded-full p-1 border-2 border-white shadow-xs">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">ให้ความยินยอมสำเร็จ</h3>
-              <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl mb-6 text-left space-y-2">
-                <p className="text-xs text-amber-800 leading-relaxed font-semibold">
-                  ⚠️ ไม่สามารถบันทึกไปยัง Google Drive ได้อัตโนมัติ:
-                </p>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  เนื่องจากแอปพลิเคชันยังอยู่ระหว่างการพัฒนา (Testing Mode) ของ Google และยังไม่ได้รับการยืนยันตัวตน (Unverified App) โดย Google จะบล็อกสิทธิ์การเข้าถึงสำหรับบัญชีทั่วไป
-                </p>
-                <div className="text-[11px] text-slate-500 bg-white p-2.5 rounded-lg border border-slate-100 space-y-1">
-                  <p className="font-bold text-slate-700">🛠️ วิธีแก้ไขสำหรับผู้พัฒนา:</p>
-                  <p>1. เข้าสู่หน้า <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">Google Cloud Console</a></p>
-                  <p>2. ไปที่เมนู <strong>APIs & Services &gt; OAuth Consent Screen</strong></p>
-                  <p>3. ในหัวข้อ <strong>Test Users</strong> ให้กดปุ่ม <strong>+ ADD USERS</strong> แล้วกรอกอีเมล Gmail ของท่าน (เช่น <code className="bg-slate-100 px-1 py-0.5 rounded font-mono text-[10px]">runghealth@gmail.com</code>)</p>
-                </div>
-                <p className="text-xs text-amber-900 font-bold pt-1">
-                  *กรุณากดปุ่ม "ดาวน์โหลด PDF" หรือ "พิมพ์เอกสาร" ด้านล่างเพื่อบันทึกเก็บไว้เป็นหลักฐานแทนชั่วคราว
-                </p>
-              </div>
-            </>
-          )}
+          <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4 animate-bounce" />
+          <h3 className="text-xl font-bold text-slate-800 mb-2">ให้ความยินยอมสำเร็จ</h3>
+          <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+            ระบบได้บันทึกเอกสารความยินยอมของท่านเรียบร้อยแล้ว ท่านสามารถดาวน์โหลดเอกสาร พิมพ์ใบแสดงความยินยอม หรือดำเนินการต่อเพื่อบันทึกข้อมูลและวิเคราะห์ผลได้ทันที
+          </p>
           
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
@@ -207,9 +183,62 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({ isOpen, onClose, onA
                 ดาวน์โหลด PDF
               </button>
             </div>
+            
+            {/* Optional Google Drive Storage Section */}
+            <div className="mt-4 border-t border-slate-100 pt-4 text-left">
+              <h4 className="text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                <Cloud className="w-4 h-4 text-blue-500" />
+                ส่งสำเนาไปยัง Google Drive (ทางเลือกเสริม)
+              </h4>
+              <p className="text-[11px] text-slate-500 mb-2.5">
+                สำหรับผู้พัฒนาหรือผู้เข้าร่วมโครงการที่ต้องการบันทึกเก็บไว้ใน Google Drive ส่วนตัวของคุณ
+              </p>
+              
+              {driveUploadSuccess === true ? (
+                <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs rounded-xl p-3 flex items-center gap-2 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>บันทึกไปยัง Google Drive สำเร็จแล้ว!</span>
+                </div>
+              ) : driveUploadSuccess === false ? (
+                <div className="space-y-2">
+                  <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl text-left space-y-1">
+                    <p className="text-[11px] text-amber-800 leading-relaxed font-semibold">
+                      ⚠️ บันทึกไปยัง Google Drive ไม่สำเร็จชั่วคราว:
+                    </p>
+                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                      เนื่องจากระบบอยู่ใน Testing Mode บัญชีทั่วไปจะถูก Google บล็อกจนกว่าคุณจะเพิ่มบัญชีใน Test Users บนหน้า OAuth Consent Screen ใน GCP Console
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleUploadToDriveManual}
+                    disabled={isUploadingDrive}
+                    className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 border border-slate-200 cursor-pointer disabled:opacity-50"
+                  >
+                    {isUploadingDrive ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังอัปโหลด...</>
+                    ) : (
+                      'ลองใหม่อีกครั้ง'
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleUploadToDriveManual}
+                  disabled={isUploadingDrive}
+                  className="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg text-xs transition-colors flex items-center justify-center gap-2 border border-blue-200 cursor-pointer disabled:opacity-50"
+                >
+                  {isUploadingDrive ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังอัปโหลด...</>
+                  ) : (
+                    'อัปโหลดไปยัง Google Drive'
+                  )}
+                </button>
+              )}
+            </div>
+
             <button 
               onClick={() => onAccept()}
-              className="mt-2 w-full py-3 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+              className="mt-4 w-full py-3.5 font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-98 cursor-pointer flex items-center justify-center gap-1.5"
             >
               ดำเนินการต่อ
             </button>
