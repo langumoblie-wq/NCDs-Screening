@@ -1424,7 +1424,7 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
                               <Pencil className="w-4 h-4" />
                             </button>
                           )}
-                          {isAdmin && onFollowUpRecord && (
+                          {onFollowUpRecord && (
                             <button
                               onClick={() => onFollowUpRecord(r)}
                               className="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 p-1.5 rounded-lg transition-colors cursor-pointer"

@@ -553,7 +553,7 @@ export const IndividualProfile: React.FC<IndividualProfileProps> = ({
                   </button>
                 )}
 
-                {isAdmin && onFollowUpRecord && (
+                {onFollowUpRecord && (
                   <button
                     onClick={() => onFollowUpRecord(latestVisit)}
                     className="bg-emerald-600 border border-emerald-700 hover:bg-emerald-700 text-white font-bold text-xs py-3 px-4.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs"
