@@ -8,6 +8,7 @@ import {
 import { ScreeningRecord, DistrictType, LOCATION_DATA } from "../types";
 
 interface NcdDashboardProps {
+  isAdmin?: boolean;
   records: ScreeningRecord[];
   onDeleteRecord: (id: number) => void;
   onSelectRecord: (record: ScreeningRecord) => void;
@@ -372,6 +373,7 @@ const LifestyleBehaviors3O2S: React.FC<{
 };
 
 export const NcdDashboard: React.FC<NcdDashboardProps> = ({ 
+  isAdmin = false,
   records, 
   onDeleteRecord, 
   onSelectRecord,
@@ -1413,7 +1415,7 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {onEditRecord && (
+                          {isAdmin && onEditRecord && (
                             <button
                               onClick={() => onEditRecord(r)}
                               className="bg-amber-50 hover:bg-amber-100 text-amber-600 p-1.5 rounded-lg transition-colors cursor-pointer"
@@ -1422,7 +1424,7 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
                               <Pencil className="w-4 h-4" />
                             </button>
                           )}
-                          {onFollowUpRecord && (
+                          {isAdmin && onFollowUpRecord && (
                             <button
                               onClick={() => onFollowUpRecord(r)}
                               className="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 p-1.5 rounded-lg transition-colors cursor-pointer"
@@ -1431,13 +1433,15 @@ export const NcdDashboard: React.FC<NcdDashboardProps> = ({
                               <History className="w-4 h-4" />
                             </button>
                           )}
-                          <button
-                            onClick={() => setRecordToDelete(r)}
-                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 p-1.5 rounded-lg transition-colors cursor-pointer"
-                            title="ลบรายงานนี้"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => setRecordToDelete(r)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 p-1.5 rounded-lg transition-colors cursor-pointer"
+                              title="ลบรายงานนี้"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
 

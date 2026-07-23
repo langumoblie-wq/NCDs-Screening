@@ -18,6 +18,14 @@ export default function App() {
   const [selectedRecord, setSelectedRecord] = useState<ScreeningRecord | null>(null);
   const [editingRecord, setEditingRecord] = useState<ScreeningRecord | null>(null);
   const [isFollowUpMode, setIsFollowUpMode] = useState(false);
+  
+  // Login states
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+
   const [showToast, setShowToast] = useState(false);
   const [toastContent, setToastContent] = useState({ title: "บันทึกข้อมูลสำเร็จ!", description: "ระบบได้เชื่อมต่อบันทึกข้อมูลเข้าฐานข้อมูลเซิร์ฟเวอร์เรียบร้อย" });
   const [loading, setLoading] = useState(true);
@@ -189,6 +197,19 @@ export default function App() {
     }
   };
 
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginUsername === "admin" && loginPassword === "admin1234") {
+      setIsAdmin(true);
+      setShowLoginModal(false);
+      setLoginError("");
+      setLoginUsername("");
+      setLoginPassword("");
+    } else {
+      setLoginError("รหัสผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans antialiased text-slate-800">
       
@@ -268,7 +289,25 @@ export default function App() {
             </div>
 
             {/* Database Status Section */}
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0 justify-center">
+              {isAdmin ? (
+                <button
+                  onClick={() => setIsAdmin(false)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-[11px] font-bold shadow-2xs transition-all flex items-center gap-1"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  ออกจากระบบแอดมิน
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="px-3 py-1.5 rounded-xl border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 text-[11px] font-bold shadow-2xs transition-all flex items-center gap-1"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  เข้าสู่ระบบ
+                </button>
+              )}
+
               {/* Database Connection Status Badge */}
               <div 
                 title={dbStatus.message}
@@ -333,6 +372,7 @@ export default function App() {
                 transition={{ duration: 0.25 }}
               >
                 <NcdDashboard 
+                  isAdmin={isAdmin}
                   records={records}
                   onDeleteRecord={handleDeleteRecord}
                   onSelectRecord={setSelectedRecord}
@@ -418,11 +458,82 @@ export default function App() {
       <AnimatePresence>
         {selectedRecord && (
           <RecordModal 
+            isAdmin={isAdmin}
             record={selectedRecord}
             onClose={() => setSelectedRecord(null)}
             onUpdateRecord={handleUpdateRecord}
             onDeleteRecord={handleDeleteRecord}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Admin Login Modal */}
+      <AnimatePresence>
+        {showLoginModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-slate-200"
+            >
+              <div className="bg-slate-50 border-b border-slate-100 p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-800">เข้าสู่ระบบแอดมิน</h3>
+                    <p className="text-[10px] text-slate-500">สำหรับเจ้าหน้าที่เพื่อจัดการข้อมูล</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowLoginModal(false)}
+                  className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition-colors"
+                >
+                  <AlertTriangle className="w-4 h-4 hidden" /> {/* dummy icon to suppress warning */}
+                  &times;
+                </button>
+              </div>
+
+              <form onSubmit={handleLogin} className="p-5 space-y-4">
+                {loginError && (
+                  <div className="bg-rose-50 border border-rose-200 text-rose-600 text-xs p-3 rounded-lg flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
+                    <span>{loginError}</span>
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-700">ชื่อผู้ใช้งาน</label>
+                  <input
+                    type="text"
+                    required
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
+                    className="w-full text-sm rounded-xl border border-slate-300 p-2.5 focus:ring-2 focus:ring-blue-500 bg-white"
+                    placeholder="Username"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-700">รหัสผ่าน</label>
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="w-full text-sm rounded-xl border border-slate-300 p-2.5 focus:ring-2 focus:ring-blue-500 bg-white"
+                    placeholder="Password"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-colors shadow-sm"
+                >
+                  เข้าสู่ระบบ
+                </button>
+              </form>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

@@ -9,13 +9,14 @@ import {
 import { ScreeningRecord } from "../types";
 
 interface RecordModalProps {
+  isAdmin?: boolean;
   record: ScreeningRecord;
   onClose: () => void;
   onUpdateRecord: (updatedRecord: ScreeningRecord) => void;
   onDeleteRecord?: (id: number) => void;
 }
 
-export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpdateRecord, onDeleteRecord }) => {
+export const RecordModal: React.FC<RecordModalProps> = ({ isAdmin = false, record, onClose, onUpdateRecord, onDeleteRecord }) => {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -517,7 +518,7 @@ export const RecordModal: React.FC<RecordModalProps> = ({ record, onClose, onUpd
 
         {/* Modal Footer */}
         <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex justify-between items-center print:hidden">
-          {onDeleteRecord && (
+          {isAdmin && onDeleteRecord && (
             <div className="flex items-center gap-2">
               {showDeleteConfirm ? (
                 <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 p-1.5 px-3 rounded-xl animate-in fade-in slide-in-from-left-2 duration-150">
